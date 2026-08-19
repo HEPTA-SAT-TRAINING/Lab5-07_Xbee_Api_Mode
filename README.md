@@ -28,7 +28,7 @@ com.set_destination(0x0013A200, 0x41234567);
 
 Open in **Chrome or Edge**, then **Add Port** → **Connect** (38400 baud):
 
-**https://hepta-sat-training.github.io/hepta-serial-viewer/**
+**https://hepta-sat-training.github.io/HEPTA-SAT-Serial_Monitor/**
 
 You should see lines such as `count from COM = ...` every second. Sending a
 character from the ground side prints `command = ...`.
