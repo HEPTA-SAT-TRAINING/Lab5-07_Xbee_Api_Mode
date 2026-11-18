@@ -36,7 +36,8 @@ void ground_byte(char c) {
     } else if (!ground_overflow && ground_used == 19 && !strncmp(ground_line, "TO ", 3) &&
                strspn(ground_line + 3, "0123456789abcdefABCDEF") == 16) {
       uint64_t peer = strtoull(ground_line + 3, nullptr, 16);
-      com.send_to(peer, (const uint8_t*)"HELLO", 5);
+      if (com.send_to(peer, (const uint8_t*)"HELLO", 5))
+        cdh.printf("HELLO to %016llX\n", (unsigned long long)peer);
     } else if (ground_used == 1) {
       echo_command(ground_line[0]);
     }
@@ -65,10 +66,12 @@ void loop() {
   if (com.tx_result().state != XbeeTxResult::Pending && com.receive_packet(packet)) {
     if (packet.length == 5 && memcmp(packet.data, "HELLO", 5) == 0) {
       com.send_to(packet.source, (const uint8_t*)"ACK", 3);
+      cdh.printf("HELLO from %016llX\n", (unsigned long long)packet.source);
     } else if (packet.source == com.zigbee()->paired()) {
       for (size_t i = 0; i < packet.length; ++i) ground_byte((char)packet.data[i]);
     }
     if (packet.length == 3 && !memcmp(packet.data, "ACK", 3)) {
+      cdh.printf("ACK from %016llX\n", (unsigned long long)packet.source);
       com.printf("ACK from %016llX\n", (unsigned long long)packet.source);
     }
   }
