@@ -14,11 +14,17 @@ On this repository's <a href="https://github.com/HEPTA-SAT-TRAINING/Lab5-07_Xbee
 
 ## Use the paired ground station
 
-Open the ground station in a serial monitor at 38400 baud. The paired satellite sends a count every second.
+Open the ground station in a serial monitor at 38400 baud. The satellite sends a count every second while its paired station is reachable. After a failed counter transmission it waits progressively longer between attempts, up to 16 seconds. The first successful counter transmission restores the one-second interval. Command processing and replies continue during the wait.
 
 ## Send from the API ground station
 
 Open the [API ground station](https://hepta-sat-training.github.io/HEPTA-SAT-XBee-Setup/station.html), connect the USB ground station and select a radio or **Broadcast · all radios**. Send `HELLO` with **EOL → None** for an `ACK` from each responding satellite. Send `g` to echo a command to the sending station. The counter continues to reach the paired station. Select **Disconnect** before opening a serial monitor.
+
+## Download a saved picture
+
+Place `picture_dl.jpg` in the root of the satellite microSD card. In the **API ground station**, select this satellite, then **Get picture → Save JPEG**. The file can be up to 1 MiB. Leave it on the card until the transfer finishes. A camera is optional.
+
+The station requests one 64-byte block by offset and requests the next immediately after a valid response. Each block carries a CRC-16. Missing or damaged blocks can be requested again up to three times. The station checks the length and the whole-file CRC-32 before enabling **Save JPEG**.
 
 ## Join another network
 
@@ -39,3 +45,9 @@ Two Full satellites and two USB ground stations were tested with S2C TH radios (
 | Both ground stations and both satellites | With ground station A as coordinator and B as router, directed requests in each direction returned the addressed ACK in 10 of 10 trials. |
 
 Chrome Web Serial tests covered manual entry, both directions of satellite loopback, each ground station’s paired echo, and restoration after a page reload. A wrong-channel attempt on channel 23 reported a join failure. Restoring channel 24 re-established the original pair. The 16-bit operating PAN ID can change when a coordinator reforms its network. Lite verification covered compilation.
+
+### Repeated broadcasts
+
+With both Full satellites on ground station A's network and ground station B on its own network, we sent 20 numbered probes at 1.5-second intervals per run. Both satellites replied to 31 of 40 probes with the original counter timing and 36 of 40 when satellite B slowed its unsuccessful counter transmissions. The four runs used the original, modified, modified and original timing in that order.
+
+An independent receiver on each OBC monitored the XBee UART output. Every numbered probe observed there reached the sketch and produced an ACK at ground station A in these runs. Some broadcasts never appeared on one or both UART outputs during the observation window. Sending a unicast to each known radio at 0.5-second intervals produced replies from both satellites for all 20 probes in a separate run. [Digi's S2C transmission guide](https://docs.digi.com/resources/documentation/digidocs/90002002/reference/r_zb_data_transmission.htm)

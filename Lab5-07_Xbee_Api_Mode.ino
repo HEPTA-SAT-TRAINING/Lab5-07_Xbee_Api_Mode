@@ -10,11 +10,16 @@ HeptaCom com;
 HeptaEps eps;
 #endif
 #include "src/common/hepta_lab_usb.h"
+#include "picture_downlink.h"
 
 HeptaLabUsb lab;
 bool ready = false;
 uint32_t last_count = 0;
 uint32_t count = 0;
+constexpr uint32_t counter_period_ms = 1000;
+constexpr uint32_t counter_max_period_ms = 16000;
+uint32_t counter_interval_ms = counter_period_ms;
+uint8_t counter_frame = 0;
 char ground_line[24];
 size_t ground_used = 0;
 bool ground_overflow = false;
@@ -59,11 +64,34 @@ void setup() {
   if (!ready) cdh.println(com.last_error());
 }
 
+void update_counter() {
+  auto* radio = com.zigbee();
+  const auto result = radio->paired_result();
+  if (result.state == XbeeTxResult::Pending) return;
+  if (counter_frame) {
+    // Command replies can also use the paired transmit slot.
+    if (result.frame_id == counter_frame) {
+      counter_interval_ms = result.state == XbeeTxResult::Delivered
+          ? counter_period_ms : min(counter_interval_ms * 2, counter_max_period_ms);
+    }
+    counter_frame = 0;
+  }
+  const uint32_t now = millis();
+  if (now - last_count < counter_interval_ms) return;
+  last_count = now;
+  if (com.printf("count from COM = %lu\n", (unsigned long)++count))
+    counter_frame = radio->paired_result().frame_id;
+}
+
 void loop() {
   lab.poll(Serial, com);
   if (!ready) { delay(1); return; }
   XbeePacket packet;
   if (com.tx_result().state != XbeeTxResult::Pending && com.receive_packet(packet)) {
+    if (picture_downlink::handle(packet, [] { return cdh.open_file(picture_downlink::filename); }, com)) {
+      update_counter();
+      return;
+    }
     if (packet.length == 5 && memcmp(packet.data, "HELLO", 5) == 0) {
       com.send_to(packet.source, (const uint8_t*)"ACK", 3);
       cdh.printf("HELLO from %016llX\n", (unsigned long long)packet.source);
@@ -90,9 +118,5 @@ void loop() {
     echo_command(ground_line[0]);
     ground_used = 0;
   }
-  if (millis() - last_count >= 1000 &&
-      com.zigbee()->paired_result().state != XbeeTxResult::Pending) {
-    last_count = millis();
-    com.printf("count from COM = %lu\n", (unsigned long)++count);
-  }
+  update_counter();
 }
