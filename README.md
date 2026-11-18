@@ -1,39 +1,16 @@
-# Lab5-07: XBee API Mode
+# Lab5-07 · XBee合同実習
 
-Firmware that downlinks a 1-second count over XBee in **API mode** (`AP=1`).
-Uplink bytes from the ground XBee are echoed back, same pattern as Lab5-02.
+HEPTA-SAT / HEPTA-SAT LiteとS2C TH Zigbee（確認機はHV 2E4E、VR 4061）を使います。地上局はAP=0、38400 baudです。衛星はこのスケッチで起動する間だけAP=1になります。
 
-The sketch calls `com.begin(XBEE_MODE_API)`. `printf` / `send` / `available`
-stay payload-oriented; the library wraps Transmit Request (`0x10`) and unwraps
-Receive Packet (`0x90`).
+## 通常のペア通信
 
-## XBee setup
+Fullはそのままビルドします。Liteはビルドフラグ `-DHEPTA_BOARD_LITE` を指定します。地上局をシリアルモニターで開くと、ペアの衛星から毎秒カウントが届きます。
 
-Keep the **on-board XBee nonvolatile setting at `AP=0`** (the usual kit state).
-`begin(XBEE_MODE_API)` sends `ATAP1` without `ATWR`, so a power cycle returns
-the radio to Transparent mode.
+## 合同実習
 
-The ground / XCTU XBee can stay in Transparent mode (`AP=0`). You should see
-the count payload, not API frame bytes.
+1. Webモニターの「合同実習」で代表班のUSB地上局を接続し、実習コードを共有します。
+2. 参加班は主電源を入れた衛星OBCをUSB接続し、同じ画面で実習コードを適用します。参加班の地上局も使う場合は、そのUSB XBeeにも適用します。参加側の役割はルーターです。
+3. 画面で自局の64ビットアドレスを確認します。ペア地上局のモニターから `TO 0013A20012345678` のように相手衛星のアドレスを入力し、行末にLFまたはCRを付けます。自班の衛星が相手へ `HELLO` を送り、相手が送信元に `ACK` を返します。ペア地上局には応答した衛星のアドレスが表示されます。通常出力の宛先はペア地上局のままです。
+4. 実習終了後は同じブラウザー・同じUSB機器で「元のネットワークに戻す」を選びます。2台目の地上局を移した場合は、そちらを先に戻して元のPANを形成し、その後に衛星を戻します。「往復を確認」で復帰を検証します。
 
-Optional unicast (XCTU `DH` / `DL` of the ground module):
-
-```cpp
-com.set_destination(0x0013A200, 0x41234567);
-```
-
-`com.set_destination_broadcast()` restores `000000000000FFFF`.
-
-## Web Serial Monitor
-
-Open in **Chrome or Edge**, then **Add Port** → **Connect** (38400 baud):
-
-**https://hepta-sat-training.github.io/HEPTA-SAT-Serial_Monitor/**
-
-You should see lines such as `count from COM = ...` every second. Sending a
-character from the ground side prints `command = ...`.
-
-## Firmware
-
-Open `Lab5-07_Xbee_Api_Mode.ino` in the Arduino IDE and upload to your board.
-For library and submodule setup, see [src/README.md](src/README.md).
+代表局では新規参加を許可しておきます。実測した地上局はNJ=FFでした。合同設定の途中で衛星XBeeの給電を切ると一時設定が失われます。Zigbeeの再参加・元のネットワークへの復帰は実際の通信で確認してください。
