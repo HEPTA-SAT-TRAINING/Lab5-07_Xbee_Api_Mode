@@ -24,7 +24,7 @@ Open the [API ground station](https://hepta-sat-training.github.io/HEPTA-SAT-XBe
 
 Place `picture_dl.jpg` in the root of the satellite microSD card. In the **API ground station**, select this satellite, then **Get picture → Save JPEG**. The file can be up to 1 MiB. Leave it on the card until the transfer finishes. A camera is optional.
 
-The station requests one 64-byte block by offset and requests the next immediately after a valid response. Each block carries a CRC-16. Missing or damaged blocks can be requested again up to three times. The station checks the length and the whole-file CRC-32 before enabling **Save JPEG**.
+The API ground station keeps up to three 64-byte blocks in flight. Each reply identifies its position in the file, so a delayed block can arrive after later blocks. The station checks each block's CRC-16 and retries a missing or damaged block up to three times. **Save JPEG** becomes available after the length and whole-file CRC-32 match.
 
 ## Join another network
 
