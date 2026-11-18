@@ -1,6 +1,16 @@
 # Lab5-07 · XBee networking
 
-For HEPTA-SAT and HEPTA-SAT Lite with S2C TH Zigbee radios. Build the sketch as supplied for Full. For Lite, add `-DHEPTA_BOARD_LITE`. The ground station runs in Transparent mode at 38400 baud. The satellite uses API mode while this sketch is running.
+## Upload this sketch to the satellite
+
+1. Open [Lab5-07_Xbee_Api_Mode.ino](Lab5-07_Xbee_Api_Mode.ino) in Arduino IDE with the `src` folder beside it. Full and Lite use this same sketch. For **Full**, use it as supplied. For **Lite**, add `#define HEPTA_BOARD_LITE` on the first line.
+2. Power the satellite and connect its **OBC** to your PC by USB. Select **Raspberry Pi Pico 2** and the **satellite's port**, then click **Upload**. This replaces the current OBC sketch. The ground station and XBee radios do not need an upload.
+3. Open [XBee network setup](https://hepta-sat-training.github.io/HEPTA-SAT-XBee-Setup/). Choose **Satellite → Connect device via USB**. Seeing the radio address confirms that the sketch is ready. Use the same sketch for each join or restore.
+
+<details><summary>Getting the sketch with a browser (Code → Download ZIP)</summary>
+
+On this repository's <a href="https://github.com/HEPTA-SAT-TRAINING/Lab5-07_Xbee_Api_Mode/tree/feat/zigbee-joint-lab">joint-network branch</a>, choose <strong>Code → Download ZIP</strong>. Extract the folder and name it <code>Lab5-07_Xbee_Api_Mode</code>. GitHub stores <code>src</code> as a separate library. Download the <a href="https://github.com/HEPTA-SAT-TRAINING/HEPTA-SAT-Library/archive/b9d8b4c86795108be244d8570be22634caab885f.zip">matching library source</a>, then copy the contents of its extracted library folder into <code>Lab5-07_Xbee_Api_Mode/src</code>. Check that <code>src/HeptaSat.h</code> is present before opening the sketch.
+
+</details>
 
 ## Use the paired ground station
 
