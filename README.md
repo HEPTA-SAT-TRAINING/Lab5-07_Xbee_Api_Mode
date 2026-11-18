@@ -16,6 +16,10 @@ On this repository's <a href="https://github.com/HEPTA-SAT-TRAINING/Lab5-07_Xbee
 
 Open the ground station in a serial monitor at 38400 baud. The paired satellite sends a count every second.
 
+## Send from the API ground station
+
+Open the [API ground station](https://hepta-sat-training.github.io/HEPTA-SAT-XBee-Setup/station.html), connect the USB ground station and select a radio or **Broadcast · all radios**. Send `HELLO` with **EOL → None** for an `ACK` from each responding satellite. Send `g` to echo a command to the sending station. The counter continues to reach the paired station. Select **Disconnect** before opening a serial monitor.
+
 ## Join another network
 
 1. Open **XBee network setup** (`lab.html`) in desktop Chrome or Edge. Select **Read host ground station via USB** and choose the station running the network you want to join. Leave it powered. If you already know the network ID and channel, use **Enter settings manually**.

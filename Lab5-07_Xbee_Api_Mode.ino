@@ -69,6 +69,16 @@ void loop() {
       cdh.printf("HELLO from %016llX\n", (unsigned long long)packet.source);
     } else if (packet.source == com.zigbee()->paired()) {
       for (size_t i = 0; i < packet.length; ++i) ground_byte((char)packet.data[i]);
+    } else {
+      // An API ground station sends each command as a complete RF packet.
+      size_t length = packet.length;
+      while (length && (packet.data[length - 1] == '\r' || packet.data[length - 1] == '\n')) --length;
+      if (length == 1 && packet.data[0] >= ' ' && packet.data[0] <= '~') {
+        char reply[] = "command = ?\r\n";
+        reply[10] = (char)packet.data[0];
+        com.send_to(packet.source, (const uint8_t*)reply, sizeof(reply) - 1);
+        cdh.printf("command = %c\r\n", packet.data[0]);
+      }
     }
     if (packet.length == 3 && !memcmp(packet.data, "ACK", 3)) {
       cdh.printf("ACK from %016llX\n", (unsigned long long)packet.source);
