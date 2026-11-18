@@ -1,29 +1,27 @@
-# Lab5-07 · XBee合同実習
+# Lab5-07 · XBee networking
 
-HEPTA-SAT / HEPTA-SAT LiteとS2C TH Zigbee（確認機はHV 2E4E、VR 4061）を使います。地上局はAP=0、38400 baudです。衛星はこのスケッチで起動する間だけAP=1になります。
+For HEPTA-SAT and HEPTA-SAT Lite with S2C TH Zigbee radios. Build the sketch as supplied for Full. For Lite, add `-DHEPTA_BOARD_LITE`. The ground station runs in Transparent mode at 38400 baud. The satellite uses API mode while this sketch is running.
 
-## 通常のペア通信
+## Use the paired ground station
 
-Fullはそのままビルドします。Liteはビルドフラグ `-DHEPTA_BOARD_LITE` を指定します。地上局をシリアルモニターで開くと、ペアの衛星から毎秒カウントが届きます。
+Open the ground station in a serial monitor at 38400 baud. The paired satellite sends a count every second.
 
-## 合同実習
+## Join another network
 
-1. PC版ChromeまたはEdgeで独立した「XBee ネットワーク設定」ページ（`lab.html`）を開きます。参加先の値が不明な場合は、稼働中のコーディネーターをUSB接続し、拡張PAN IDとチャネルを読み取れます。
-2. 主電源を入れた衛星OBCをUSB接続します。参加先の拡張PAN ID（例 `0x20`）とチャネル（例 `24`）を入力し、「参加先を確認」→「この機器を参加させる」を選びます。追加の地上局も使う場合は、そのUSB XBeeにも同じ操作を行います。参加側の役割はルーターです。
-3. 画面で自局の64ビットアドレスを確認します。ペア地上局のモニターから `TO 0013A20012345678` のように相手衛星のアドレスを入力し、行末にLFまたはCRを付けます。地上局とペアの衛星が相手へ `HELLO` を送り、相手が送信元に `ACK` を返します。ペア地上局には応答した衛星のアドレスが表示されます。通常出力の宛先はペア地上局のままです。
-4. 実習終了後は同じブラウザー・同じUSB機器で「元のネットワークに戻す」を選びます。2台目の地上局を移した場合は、そちらを先に戻して元のPANを形成し、その後に衛星を戻します。「往復を確認」で復帰を検証します。
+1. Open **XBee network setup** (`lab.html`) in desktop Chrome or Edge. Select **Read host ground station via USB** and choose the station running the network you want to join. Leave it powered. If you already know the network ID and channel, use **Enter settings manually**.
+2. Power the joining satellite and connect its OBC by USB. Choose **Satellite → Connect device via USB → Review network change → Join network**. To move an additional ground station, repeat with **Ground station**. Joining devices take the router role. The host must allow new devices to join.
+3. In the paired ground station’s serial monitor, send `TO 0013A20012345678` with LF or CR, substituting the destination satellite’s radio address. The satellite sends `HELLO`; the peer replies with `ACK`. The originating ground station displays the responding address. Routine telemetry continues to use the paired ground station.
+4. In the same browser, reconnect each moved device and select **Restore original network**. Restore the ground station first so that it can form its original network. Select **Test radio link** to verify the return path.
 
-代表局では新規参加を許可しておきます。実測した地上局はNJ=FFでした。合同設定の途中で衛星XBeeの給電を切ると一時設定が失われます。Zigbeeの再参加・元のネットワークへの復帰は実際の通信で確認してください。
+The radio address identifies a physical XBee. The network ID (extended PAN ID) identifies a Zigbee network. The channel is the radio channel on which that network operates. The setup page reads both network values from the active host. Power loss clears temporary radio configuration.
 
-## 実機で確認した構成（2026-11-18）
+## Hardware verification · 2026-11-18
 
-Full 2機とUSB地上局2台を使用しました。元の拡張PAN IDは `0x20` と `0x21`、どちらもチャネルは24（`0x18`）です。地上局は試験を通じてTransparentモード、38400 baudで動作しました。
+Two Full satellites and two USB ground stations were tested with S2C TH radios (HV `2E4E`, VR `4061`). The two original networks used IDs `0x20` and `0x21`, both on channel 24. The tested host allowed joining (NJ `FF`).
 
-| 合同PANに参加した機器 | 確認した通信 |
+| Devices on the shared network | Verified result |
 | --- | --- |
-| 地上局A、衛星A・B | 地上局Bを元のPANに置いたまま、衛星間の双方向ループバックと、地上局Aの `TO` に対する衛星BからのACKを確認。 |
-| 地上局A・B、衛星A・B | Aをコーディネーター、地上局Bをルーターに設定。Aから衛星B、Bから衛星Aを指定し、アドレス付きACKが指示元へ各10回中10回到着。 |
+| Ground station A and satellites A and B | Both satellite loopbacks and the application ACK from B reached their destinations while ground station B stayed on its original network. |
+| Both ground stations and both satellites | With ground station A as coordinator and B as router, directed requests in each direction returned the addressed ACK in 10 of 10 trials. |
 
-ChromeのWeb Serialで4台の実ポートを選び、設定ページに `0x20` と `24` を入力して衛星Bと地上局Bを参加させました。衛星間の両方向と各地上局からペア衛星への往復を各3回確認しました。ページ再読み込み後も個体別の復帰先を読み出せました。地上局B、衛星Bの順に `0x21` へ戻し、両地上局から元のペアとの往復を確認しました。
-
-衛星Bにチャネル23を指定すると、参加失敗と未参加状態を表示しました。ページを再読み込みして同じXBeeを選び、「元のネットワークに戻す」でチャネル24に復帰し、ペア地上局との無線往復を確認しました。コーディネーターがPANを作り直すと、16ビットの動作PAN ID（OI）は変わることがあります。Liteはビルド確認までです。
+Chrome Web Serial tests covered manual entry, both directions of satellite loopback, each ground station’s paired echo, and restoration after a page reload. A wrong-channel attempt on channel 23 reported a join failure. Restoring channel 24 re-established the original pair. The 16-bit operating PAN ID can change when a coordinator reforms its network. Lite verification covered compilation.
